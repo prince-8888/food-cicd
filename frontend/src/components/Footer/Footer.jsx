@@ -16,6 +16,7 @@ export default function () {
                         <img src={assets.linkedin_icon} alt="" />
                     </div>
                 </div>
+                
 
 
                 <div className='footer-content-center'>
