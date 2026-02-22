@@ -1,0 +1,15 @@
+import React from 'react'
+import './AppDownload.css'
+import {assets} from '../../assets/assets.js'
+
+export default function AppDownload() {
+    return (
+        <div className='app-download' id='add-download'>
+            <p>For Better Experienc Download <br />Tomato App</p>
+            <div className='app-download-platforms'>
+                <img src={assets.play_store} alt="" />
+                <img src={assets.app_store} alt="" />
+            </div>
+        </div>
+    )
+}
