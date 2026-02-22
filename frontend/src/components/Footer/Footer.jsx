@@ -10,6 +10,7 @@ export default function () {
                 <div className='footer-content-left'>
                     <img src={assets.logo} alt="" />
                     <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Neque aliquid amet officiis nam rerum molestias cum quo ullam quis est.</p>
+                    <p>Prince</p>
                     <div className="footer-social-icons">
                         <img src={assets.facebook_icon} alt="" />
                         <img src={assets.twitter_icon} alt="" />
