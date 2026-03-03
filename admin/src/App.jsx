@@ -10,7 +10,8 @@ import 'react-toastify/dist/ReactToastify.css';
 
 
 export default function App() {
-  const url = "http://localhost:4000"
+  // const url = "http://localhost:4000"
+  const url = "/admin"
   return (
     <div>
       <ToastContainer/>
