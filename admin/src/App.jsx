@@ -11,7 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 export default function App() {
   // const url = "http://localhost:4000"
-  const url = "http://ec2-13-61-190-232.eu-north-1.compute.amazonaws.com"
+  const url = "/server"
   return (
     <div>
       <ToastContainer/>
