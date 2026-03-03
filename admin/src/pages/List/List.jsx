@@ -54,7 +54,7 @@ const removeFood= async(foodId)=>{
               <p>{item.name}</p>
               <p>{item.category}</p>
               <p>₹{item.price}</p>
-              <p  onClick={()=>{removeFood(item._id)}} className='cursor text-red-500'>Remove</p>
+              <p  onClick={()=>{removeFood(item._id)}} className='cursor'>Remove</p>
             </div>
           )
         })}
