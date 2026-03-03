@@ -83,7 +83,7 @@ export default function Add({url}) {
                     </div>
                     <div className='add-price flex-col'>
                         <p>Product Price</p>
-                        <input onChange={onChangeHand1er} value={data.price} type="Number" name="price" placeholder='$20' id="" />
+                        <input onChange={onChangeHand1er} value={data.price} type="Number" name="price" placeholder='₹200' id="" />
                     </div>
                 </div>
                 <button type='submit' className='add-btn'>ADD</button>

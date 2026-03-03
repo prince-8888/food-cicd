@@ -53,8 +53,8 @@ const removeFood= async(foodId)=>{
               <img src={`${url}/images/`+ item.image} alt="" />
               <p>{item.name}</p>
               <p>{item.category}</p>
-              <p>${item.price}</p>
-              <p onClick={()=>{removeFood(item._id)}} className='cursor'>X</p>
+              <p>₹{item.price}</p>
+              <p onClick={()=>{removeFood(item._id)}} className='cursor'>remove</p>
             </div>
           )
         })}
