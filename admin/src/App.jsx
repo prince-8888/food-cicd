@@ -20,7 +20,7 @@ export default function App() {
       <div className='app-content'>
         <Sidebar/>
         <Routes>
-          <Route path='/' element={<Add url={url}/>}/>
+          
           <Route path='/add' element={<Add url={url}/>}/>
           <Route path='/list' element={<List url={url}/>}/>
           <Route path='/listorders' element={<Orders url={url}/>}/>
