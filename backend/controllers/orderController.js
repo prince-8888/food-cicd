@@ -6,8 +6,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Placing user order for frontend
 const placeOrder = async (req, res) => {
-    // const frontend_url = "http://localhost:5173";
-    const frontend_url = "http://ec2-13-60-209-230.eu-north-1.compute.amazonaws.com"
+    // ✅ Use public IP (more reliable than long DNS)
+    const frontend_url = "http://13.60.209.230";
 
     try {
         const newOrder = new orderModel({
@@ -20,29 +20,31 @@ const placeOrder = async (req, res) => {
         await newOrder.save();
         await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
 
+        // ✅ Ensure numbers are correct
         const line_items = req.body.items.map((item) => ({
             price_data: {
-                currency: "inr",
+                currency: "usd", // 🔥 safer for testing (change later to inr)
                 product_data: {
                     name: item.name,
                 },
-                unit_amount: item.price * 100, // Convert to paise
+                unit_amount: Number(item.price) * 100,
             },
             quantity: item.quantity,
         }));
 
+        // Delivery charge
         line_items.push({
             price_data: {
-                currency: "inr",
+                currency: "usd",
                 product_data: {
                     name: "Delivery Charges",
                 },
-                unit_amount: 200, // Delivery charge in paise (2 INR)
+                unit_amount: 200,
             },
             quantity: 1,
         });
 
-        // ✅ Fix: Use stripe.checkout.sessions.create() (lowercase c in checkout & plural sessions)
+        // ✅ Create Stripe session
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
             line_items: line_items,
@@ -51,65 +53,74 @@ const placeOrder = async (req, res) => {
             cancel_url: `${frontend_url}/verify?success=false&orderId=${newOrder._id}`,
         });
 
+        // ✅ Send session URL
         res.json({ success: true, session_url: session.url });
+
     } catch (error) {
-        console.error(error);
-        res.json({ success: false, message: "Error processing order" });
+        // 🔥 IMPORTANT: show real error
+        console.error("STRIPE ERROR:", error.message);
+
+        res.json({
+            success: false,
+            message: error.message, // 👈 show real error
+        });
     }
 };
 
+
+// Verify order
 const verifyOrder = async (req, res) => {
     const { orderId, success } = req.body;
     try {
         if (success === "true") {
-            await orderModel.findByIdAndUpdate(orderId, { payment: true })
-            res.json({ success: true, message: "Paid" })
-        }
-        else {
-            await orderModel.findByIdAndDelete(orderId)
-            res.json({ success: false, message: "Not Paid" })
+            await orderModel.findByIdAndUpdate(orderId, { payment: true });
+            res.json({ success: true, message: "Paid" });
+        } else {
+            await orderModel.findByIdAndDelete(orderId);
+            res.json({ success: false, message: "Not Paid" });
         }
     } catch (error) {
         console.log(error);
-        res.json({ success: false, message: "Error" })
-
-
+        res.json({ success: false, message: error.message });
     }
+};
 
 
-}
-
+// User orders
 const userOrders = async (req, res) => {
     try {
-        const orders = await orderModel.find({ userId: req.body.userId })
-        res.json({ success: true, data: orders })
+        const orders = await orderModel.find({ userId: req.body.userId });
+        res.json({ success: true, data: orders });
     } catch (error) {
         console.log(error);
-        res.json({ success: false, message: "Error" })
-
+        res.json({ success: false, message: error.message });
     }
-}
+};
 
-//listing all orders for admin
+
+// Admin: list all orders
 const listOrder = async (req, res) => {
     try {
         const orders = await orderModel.find({});
-        res.json({ success: true, data: orders })
+        res.json({ success: true, data: orders });
     } catch (error) {
         console.log(error);
-        res.json({ success: false, message: "Error" })
+        res.json({ success: false, message: error.message });
     }
-}
+};
 
-//api for updating order status 
+
+// Update order status
 const updateStatus = async (req, res) => {
-        try {
-            await orderModel.findByIdAndUpdate(req.body.orderId,{status:req.body.status})
-            res.json({success:true, message:"Status Updated"})
-        } catch (error) {
-            console.log(error)
-            res.json({success:false, message:"Error"})
-        }
-}
+    try {
+        await orderModel.findByIdAndUpdate(req.body.orderId, {
+            status: req.body.status,
+        });
+        res.json({ success: true, message: "Status Updated" });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
 
 export { placeOrder, verifyOrder, userOrders, listOrder, updateStatus };
