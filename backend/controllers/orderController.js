@@ -6,10 +6,16 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Placing user order for frontend
 const placeOrder = async (req, res) => {
-    // ✅ Use public IP (more reliable than long DNS)
     const frontend_url = "http://13.60.209.230";
 
     try {
+        // ✅ Basic validation (VERY IMPORTANT)
+        if (!req.body.userId || !req.body.items || req.body.items.length === 0) {
+            return res.json({ success: false, message: "Invalid order data" });
+        }
+
+        console.log("STEP 1: Creating order");
+
         const newOrder = new orderModel({
             userId: req.body.userId,
             items: req.body.items,
@@ -18,21 +24,32 @@ const placeOrder = async (req, res) => {
         });
 
         await newOrder.save();
+
+        console.log("STEP 2: Order saved");
+
         await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
 
-        // ✅ Ensure numbers are correct
-        const line_items = req.body.items.map((item) => ({
-            price_data: {
-                currency: "usd", // 🔥 safer for testing (change later to inr)
-                product_data: {
-                    name: item.name,
-                },
-                unit_amount: Number(item.price) * 100,
-            },
-            quantity: item.quantity,
-        }));
+        console.log("STEP 3: Cart cleared");
 
-        // Delivery charge
+        // ✅ Safe line items creation
+        const line_items = req.body.items.map((item) => {
+            if (!item.price || !item.quantity) {
+                throw new Error("Invalid item data");
+            }
+
+            return {
+                price_data: {
+                    currency: "usd", // change to inr later
+                    product_data: {
+                        name: item.name || "Food Item",
+                    },
+                    unit_amount: Math.round(Number(item.price) * 100),
+                },
+                quantity: item.quantity,
+            };
+        });
+
+        // ✅ Delivery charge
         line_items.push({
             price_data: {
                 currency: "usd",
@@ -44,25 +61,34 @@ const placeOrder = async (req, res) => {
             quantity: 1,
         });
 
-        // ✅ Create Stripe session
+        console.log("STEP 4: Creating Stripe session");
+
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
-            line_items: line_items,
+            line_items,
             mode: "payment",
             success_url: `${frontend_url}/verify?success=true&orderId=${newOrder._id}`,
             cancel_url: `${frontend_url}/verify?success=false&orderId=${newOrder._id}`,
         });
 
-        // ✅ Send session URL
-        res.json({ success: true, session_url: session.url });
+        console.log("STEP 5: Stripe session created", session.url);
+
+        if (!session.url) {
+            throw new Error("Stripe session URL not generated");
+        }
+
+        // ✅ Final response
+        return res.json({
+            success: true,
+            session_url: session.url,
+        });
 
     } catch (error) {
-        // 🔥 IMPORTANT: show real error
-        console.error("STRIPE ERROR:", error.message);
+        console.error("🔥 ERROR IN PLACE ORDER:", error);
 
-        res.json({
+        return res.json({
             success: false,
-            message: error.message, // 👈 show real error
+            message: error.message || "Something went wrong",
         });
     }
 };
